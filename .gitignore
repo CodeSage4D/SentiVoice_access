@@ -1,0 +1,29 @@
+# Ignore Python bytecode
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environment directory
+venv/
+
+# Ignore model and vectorizer files
+model/best_model.pkl
+model/vectorizer.pkl
+
+# Ignore feedback files
+feedback/positive_feedback.csv
+feedback/neutral_feedback.csv
+feedback/negative_feedback.csv
+feedback/combined_feedback.csv
+
+# Ignore data files
+data/Emotions.csv
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore logs
+*.log

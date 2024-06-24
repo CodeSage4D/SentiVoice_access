@@ -1,0 +1,24 @@
+    SentiAnalysis/
+    │
+    ├── data/
+    │   └── Emotions.csv
+    │
+    ├── model/
+    │   ├── best_model.pkl
+    │   └── vectorizer.pkl
+    │
+    │
+    ├── feedback/
+    │   ├── feedback\positive_feedback.csv
+    │   └── feedback\neutral_feedback.csv
+    │   └── feedback\negative_feedback.csv
+    │   └── feedback\combined_feedback.csv
+    │
+    │
+    ├── .gitignore
+    ├── final.py
+    ├── modelTrain.py
+    ├── utils.py
+    ├── app.py
+    ├── feedback.py
+    └── venv/
