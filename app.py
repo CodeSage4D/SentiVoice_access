@@ -1,333 +1,175 @@
-# import streamlit as st
-# import pandas as pd
-# import joblib
-# import os
-# import matplotlib.pyplot as plt
-# import seaborn as sns
-# from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
-# import speech_recognition as sr
-# from feedback import update_feedback, get_last_n_feedback, get_feedback, get_feedback_count
-
-# # Load the pre-trained model and vectorizer
-# def load_model_and_vectorizer(model_dir):
-#     model_path = os.path.join(model_dir, 'best_model.pkl')
-#     vectorizer_path = os.path.join(model_dir, 'vectorizer.pkl')
-#     model = joblib.load(model_path)
-#     vectorizer = joblib.load(vectorizer_path)
-#     return model, vectorizer
-
-# # Process the input text
-# def preprocess_text(text, vectorizer):
-#     return vectorizer.transform([text])
-
-# # Predict sentiment
-# def predict_sentiment(model, X):
-#     return model.predict(X)
-
-# # Function to perform sentiment analysis
-# def perform_sentiment_analysis(text_input, model, vectorizer):
-#     # Preprocess the input text
-#     X = preprocess_text(text_input, vectorizer)
-
-#     # Predict sentiment
-#     sentiment = predict_sentiment(model, X)
-
-#     # Map sentiment labels to human-readable names
-#     sentiment_mapping = {0: 'Negative', 1: 'Positive', 2: 'Neutral'}
-#     sentiment_label = sentiment_mapping.get(sentiment[0], 'Unknown')
-
-#     # Display sentiment result
-#     st.write("Sentiment:", sentiment_label)
-#     st.write("")
-
-#     # Save feedback
-#     update_feedback(text_input, sentiment[0])
-
-#     # Display line plot for sentiment means and density plot in parallel
-#     st.header("Sentiment Analysis")
-#     df_means = pd.DataFrame({
-#         'Sentiment': ['Positive', 'Negative', 'Neutral'],
-#         'Mean': [1.0 if sentiment_label == 'Positive' else 0.0,
-#                  1.0 if sentiment_label == 'Negative' else 0.0,
-#                  1.0 if sentiment_label == 'Neutral' else 0.0]
-#     })
-
-#     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-
-#     # Sentiment Means over Time
-#     sns.lineplot(data=df_means, x='Sentiment', y='Mean', marker='o', ax=ax1)
-#     ax1.set_ylim([0, 1])
-#     ax1.set_xlabel('Sentiment')
-#     ax1.set_ylabel('Mean')
-#     ax1.set_title("Sentiment Means over Time")
-
-#     # Density Plot
-#     sns.barplot(data=df_means, x='Sentiment', y='Mean', palette='Set2', ax=ax2)
-#     ax2.set_xlabel('Sentiment')
-#     ax2.set_ylabel('Density')
-#     ax2.set_title("Density Plot")
-
-#     # Adjust layout and display
-#     plt.tight_layout()
-#     st.pyplot(fig)
-
-# # Function to handle voice input
-# def handle_voice_input():
-#     r = sr.Recognizer()
-#     mic_text = ""
-
-#     st.write("Click below to start speaking:")
-#     if st.button("Start Microphone"):
-#         with sr.Microphone() as source:
-#             r.adjust_for_ambient_noise(source)
-#             st.write("Listening... Speak command:")
-#             audio = r.listen(source)
-
-#         try:
-#             mic_text = r.recognize_google(audio)
-#             st.write(f"Command: {mic_text}")
-#         except sr.UnknownValueError:
-#             st.write("Google Speech Recognition could not understand audio")
-#         except sr.RequestError as e:
-#             st.write(f"Could not request results from Google Speech Recognition service; {e}")
-
-#     return mic_text
-
-# # Main function
-# def main():
-#     st.title("Sentiment Analysis App")
-
-#     # Load pre-trained model and vectorizer
-#     model_dir = 'model'  # Change this to your model directory
-#     model, vectorizer = load_model_and_vectorizer(model_dir)
-
-#     # Sidebar with Model and Dataset Details
-#     st.sidebar.header("Model and Dataset Details")
-#     st.sidebar.write("Model and Vectorizer Size: TBD bytes")
-#     st.sidebar.write("Total Dataset Size: 400000")
-#     st.sidebar.write("Training Dataset Size: 320000")
-#     st.sidebar.write("Training Data Ratio: 80.00%")
-
-#     # Display model performance metrics and confusion matrix
-#     st.header("Model Performance")
-    
-#     # Load dataset for accuracy calculation (just for demo purposes)
-#     df = pd.read_csv('data/Emotions.csv')
-#     X_train = vectorizer.transform(df['text'])
-#     y_train = df['label']
-#     y_pred = model.predict(X_train)
-
-#     # Calculate accuracy
-#     accuracy = accuracy_score(y_train, y_pred) * 100
-#     st.metric(label="Model Accuracy", value=f"{accuracy:.2f}%")
-
-#     # Display classification report
-#     st.write("Classification Report")
-#     class_report = classification_report(y_train, y_pred)
-#     st.text(class_report)
-
-#     # Display confusion matrix
-#     st.write("Confusion Matrix")
-#     fig, ax = plt.subplots(figsize=(6, 4))
-#     sns.heatmap(confusion_matrix(y_train, y_pred), annot=True, fmt='d', cmap='Blues', ax=ax)
-#     ax.set_xlabel('Predicted Labels')
-#     ax.set_ylabel('True Labels')
-#     st.pyplot(fig)
-
-#     # Display dataset distribution graph
-#     st.header("Dataset Distribution")
-#     fig1, ax1 = plt.subplots(figsize=(6, 4))
-#     sns.countplot(data=df, x='label', palette='Set2', ax=ax1)
-#     ax1.set_xlabel('Sentiment')
-#     ax1.set_ylabel('Count')
-#     st.pyplot(fig1)
-
-#     # User input for sentiment analysis
-#     st.header("Analyze Sentiment")
-#     text_input = st.text_area("Enter text to analyze sentiment:", "")
-
-#     if text_input:
-#         perform_sentiment_analysis(text_input, model, vectorizer)
-
-#     # Voice command handling
-#     st.header("Voice Commands")
-#     mic_text = handle_voice_input()
-
-#     if mic_text:
-#         if "show last 5 feedback" in mic_text.lower():
-#             st.header("Last 5 Feedback Entries")
-#             last_n_feedback = get_last_n_feedback(5)
-#             st.write(last_n_feedback)
-#         elif "show positive feedback" in mic_text.lower():
-#             st.header("Positive Feedback Entries")
-#             positive_feedback = get_feedback(1)
-#             st.write(positive_feedback)
-#         elif "show negative feedback" in mic_text.lower():
-#             st.header("Negative Feedback Entries")
-#             negative_feedback = get_feedback(0)
-#             st.write(negative_feedback)
-#         elif "show neutral feedback" in mic_text.lower():
-#             st.header("Neutral Feedback Entries")
-#             neutral_feedback = get_feedback(2)
-#             st.write(neutral_feedback)
-#         else:
-#             st.write("Command not recognized. Try 'show last 5 feedback', 'show positive feedback', 'show negative feedback', or 'show neutral feedback'.")
-
-# if __name__ == "__main__":
-#     main()
-##  --------------------------------------------------------------------------------------------------------------
-# This code work based on model trained-------------------------------
 import streamlit as st
 import pandas as pd
-import joblib
+from transformers import pipeline
 import os
-import matplotlib.pyplot as plt
-import seaborn as sns
+import re
 import speech_recognition as sr
-from feedback import update_feedback, get_last_n_feedback, get_feedback, get_feedback_count
 
-# Load the pre-trained model and vectorizer
-def load_model_and_vectorizer(model_dir):
-    model_path = os.path.join(model_dir, 'best_model.pkl')
-    vectorizer_path = os.path.join(model_dir, 'vectorizer.pkl')
-    model = joblib.load(model_path)
-    vectorizer = joblib.load(vectorizer_path)
-    return model, vectorizer
+# Feedback File Path
+FEEDBACK_FILE = "feedback/combined_feedback.csv"
 
-# Process the input text
-def preprocess_text(text, vectorizer):
-    return vectorizer.transform([text])
+# Load Hugging Face Sentiment Analysis
+@st.cache_resource
+def load_pipeline():
+    return pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
-# Predict sentiment
-def predict_sentiment(model, X):
-    return model.predict(X)
+sentiment_analyzer = load_pipeline()
 
-# Function to perform sentiment analysis
-def perform_sentiment_analysis(text_input, model, vectorizer):
-    # Preprocess the input text
-    X = preprocess_text(text_input, vectorizer)
+# Ensure feedback directory exists
+os.makedirs(os.path.dirname(FEEDBACK_FILE), exist_ok=True)
 
-    # Predict sentiment
-    sentiment = predict_sentiment(model, X)
+# Initialize feedback storage
+if not os.path.exists(FEEDBACK_FILE):
+    pd.DataFrame(columns=["text", "sentiment", "score"]).to_csv(FEEDBACK_FILE, index=False)
 
-    # Map sentiment labels to human-readable names
-    sentiment_mapping = {0: 'Negative', 1: 'Positive', 2: 'Neutral'}
-    sentiment_label = sentiment_mapping.get(sentiment[0], 'Unknown')
+# Save feedback
+def save_feedback(feedback_text, sentiment, score):
+    df = pd.read_csv(FEEDBACK_FILE)
+    new_entry = pd.DataFrame({"text": [feedback_text], "sentiment": [sentiment], "score": [score]})
+    updated_df = pd.concat([df, new_entry], ignore_index=True)
+    updated_df.to_csv(FEEDBACK_FILE, index=False)
 
-    # Display sentiment result
-    st.write("Sentiment:", sentiment_label)
-    st.write("")
-
-    # Save feedback
-    update_feedback(text_input, sentiment[0])
-
-    # Display line plot for sentiment means and density plot in parallel
-    st.header("Sentiment Analysis")
-    df_means = pd.DataFrame({
-        'Sentiment': ['Positive', 'Negative', 'Neutral'],
-        'Mean': [1.0 if sentiment_label == 'Positive' else 0.0,
-                 1.0 if sentiment_label == 'Negative' else 0.0,
-                 1.0 if sentiment_label == 'Neutral' else 0.0]
-    })
-
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-
-    # Sentiment Means over Time
-    sns.lineplot(data=df_means, x='Sentiment', y='Mean', marker='o', ax=ax1)
-    ax1.set_ylim([0, 1])
-    ax1.set_xlabel('Sentiment')
-    ax1.set_ylabel('Mean')
-    ax1.set_title("Sentiment Means over Time")
-
-    # Density Plot
-    sns.barplot(data=df_means, x='Sentiment', y='Mean', palette='Set2', ax=ax2)
-    ax2.set_xlabel('Sentiment')
-    ax2.set_ylabel('Density')
-    ax2.set_title("Density Plot")
-
-    # Adjust layout and display
-    plt.tight_layout()
-    st.pyplot(fig)
-
-# Function to handle voice input
-def handle_voice_input():
-    r = sr.Recognizer()
-    mic_text = ""
-
-    st.write("Click below to start speaking:")
-    if st.button("Start Microphone"):
-        with sr.Microphone() as source:
-            r.adjust_for_ambient_noise(source)
-            st.write("Listening... Speak command:")
-            audio = r.listen(source)
-
-        try:
-            mic_text = r.recognize_google(audio)
-            st.write(f"Command: {mic_text}")
-        except sr.UnknownValueError:
-            st.write("Google Speech Recognition could not understand audio")
-        except sr.RequestError as e:
-            st.write(f"Could not request results from Google Speech Recognition service; {e}")
-
-    return mic_text
-
-# Main function
-def main():
-    st.title("Sentiment Analysis App")
-
-    # Load pre-trained model and vectorizer
-    model_dir = 'model'  # Change this to your model directory
-    model, vectorizer = load_model_and_vectorizer(model_dir)
-
-    # Sidebar with Model and Dataset Details
-    st.sidebar.header("Model and Dataset Details")
-    st.sidebar.write("Model and Vectorizer Size: TBD bytes")
-    st.sidebar.write("Total Dataset Size: 400000")
-    st.sidebar.write("Training Dataset Size: 320000")
-    st.sidebar.write("Training Data Ratio: 80.00%")
-
-    # Display model performance metrics and confusion matrix
-    st.header("Model Performance")
-    st.write("Model performance details are available in the training phase.")
-
-    # User input for sentiment analysis
-    st.header("Analyze Sentiment")
-    text_input = st.text_area("Enter text to analyze sentiment:", "")
-
-    if text_input:
-        perform_sentiment_analysis(text_input, model, vectorizer)
-
-    # Voice command handling
-    st.header("Voice Commands")
-    mic_text = handle_voice_input()
-
-    if mic_text:
-        if "show last 5 feedback" in mic_text.lower():
-            st.header("Last 5 Feedback Entries")
-            last_n_feedback = get_last_n_feedback(5)
-            st.write(last_n_feedback)
-        elif "show positive feedback" in mic_text.lower():
-            st.header("Positive Feedback Entries")
-            positive_feedback = get_feedback(1)
-            st.write(positive_feedback)
-        elif "show negative feedback" in mic_text.lower():
-            st.header("Negative Feedback Entries")
-            negative_feedback = get_feedback(0)
-            st.write(negative_feedback)
-        elif "show neutral feedback" in mic_text.lower():
-            st.header("Neutral Feedback Entries")
-            neutral_feedback = get_feedback(2)
-            st.write(neutral_feedback)
+# Retrieve feedback
+def get_feedback(sentiment_filter=None, count=5, position="last"):
+    try:
+        df = pd.read_csv(FEEDBACK_FILE)
+        if sentiment_filter:
+            df = df[df["sentiment"].str.upper() == sentiment_filter.upper()]
+        if position == "first":
+            df = df.head(count)
         else:
-            st.write("Command not recognized. Try 'show last 5 feedback', 'show positive feedback', 'show negative feedback', or 'show neutral feedback'.")
+            df = df.tail(count)
+        return df.to_dict("records") if not df.empty else []
+    except Exception as e:
+        st.error(f"Error retrieving feedback: {e}")
+        return []
 
-# Command worked only
-st.sidebar.header("Commands for Access")
-st.sidebar.write("show last 5 feedback")
-st.sidebar.write("show neutral feedback")
-st.sidebar.write("show negative feedback")
-st.sidebar.write("show positive feedback")
+# Count feedback by sentiment
+def count_feedback():
+    try:
+        df = pd.read_csv(FEEDBACK_FILE)
+        counts = df["sentiment"].value_counts().to_dict()
+        return {sent.upper(): counts.get(sent, 0) for sent in ["POSITIVE", "NEGATIVE", "NEUTRAL"]}
+    except Exception as e:
+        st.error(f"Error counting feedback: {e}")
+        return {}
+
+# Handle voice commands
+def handle_voice_command(command):
+    command = command.lower()
+    feedback = []
+    try:
+        # Extract number and sentiment using regex
+        number_match = re.search(r"(\d+)", command)
+        count = int(number_match.group()) if number_match else 5
+        sentiment = None
+
+        if "positive" in command:
+            sentiment = "POSITIVE"
+        elif "negative" in command:
+            sentiment = "NEGATIVE"
+        elif "neutral" in command:
+            sentiment = "NEUTRAL"
+
+        # Determine position (first/last)
+        position = "first" if "first" in command else "last"
+
+        # Process command
+        if "show" in command and "feedback" in command:
+            feedback = get_feedback(sentiment_filter=sentiment, count=count, position=position)
+        elif "count feedback" in command:
+            feedback = count_feedback()
+        elif "all feedback" in command:
+            feedback = get_feedback(sentiment_filter=None, count=1000)
+    except Exception as e:
+        st.error(f"Error processing command: {e}")
+    return feedback
+
+# Streamlit App
+def main():
+    st.title("Feedback Sentiment Tracker with Voice Commands")
+    st.info("Supported Commands:\n\n"
+            "1. 'Show last 5 positive feedback.'\n"
+            "2. 'Show first 3 negative feedback.'\n"
+            "3. 'Count feedback.'\n"
+            "4. 'Show all feedback.'\n"
+            "5. 'Show last 2 neutral feedback.'")
+
+    # Section 1: Input Feedback
+    st.subheader("Submit Your Feedback")
+    feedback_text = st.text_area("Enter your feedback:", height=100)
+    if st.button("Analyze and Save Feedback"):
+        if feedback_text.strip():
+            # Analyze Sentiment
+            analysis = sentiment_analyzer(feedback_text)[0]
+            sentiment = analysis["label"]
+            score = round(analysis["score"] * 100, 2)
+
+            # Save Feedback
+            save_feedback(feedback_text, sentiment, score)
+            st.success(f"Feedback saved! Sentiment: **{sentiment}** (Score: {score}%)")
+        else:
+            st.error("Please enter valid feedback!")
+
+    # Section 2: Command Testing
+    st.subheader("Test Commands")
+    commands = [
+        "Show last 5 positive feedback",
+        "Show first 3 negative feedback",
+        "Show last 2 neutral feedback",
+        "Count feedback",
+        "Show all feedback"
+    ]
+    selected_command = st.selectbox("Select a command to test:", commands)
+    if st.button("Execute Command"):
+        feedback = handle_voice_command(selected_command)
+        if isinstance(feedback, list):
+            if feedback:
+                st.write("Retrieved feedback entries:")
+                for idx, fb in enumerate(feedback, start=1):
+                    st.write(f"**{idx}. {fb['text']}** - Sentiment: {fb['sentiment']} (Score: {fb['score']}%)")
+            else:
+                st.warning("No feedback entries found!")
+        elif isinstance(feedback, dict):
+            st.write("Feedback Count by Sentiment:")
+            for sentiment, count in feedback.items():
+                st.write(f"**{sentiment}: {count} entries**")
+        else:
+            st.error("No feedback available for the given command.")
+
+    # Section 3: Voice Commands
+    st.subheader("Voice Command Mode")
+    st.text("Click below to start speaking:")
+    if st.button("Start Voice Command"):
+        recognizer = sr.Recognizer()
+        with sr.Microphone() as source:
+            st.info("Listening... Speak your command:")
+            try:
+                audio = recognizer.listen(source, timeout=5)
+                command = recognizer.recognize_google(audio)
+                st.write(f"Command: {command}")
+
+                # Handle Command
+                feedback = handle_voice_command(command)
+                if isinstance(feedback, list):
+                    if feedback:
+                        st.write("Retrieved feedback entries:")
+                        for idx, fb in enumerate(feedback, start=1):
+                            st.write(f"**{idx}. {fb['text']}** - Sentiment: {fb['sentiment']} (Score: {fb['score']}%)")
+                    else:
+                        st.warning("No feedback entries found!")
+                elif isinstance(feedback, dict):
+                    st.write("Feedback Count by Sentiment:")
+                    for sentiment, count in feedback.items():
+                        st.write(f"**{sentiment}: {count} entries**")
+                else:
+                    st.error("No feedback available for the given command.")
+            except sr.UnknownValueError:
+                st.error("Could not understand the audio. Please try again.")
+            except sr.RequestError as e:
+                st.error(f"Could not request results; {e}")
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
 
 if __name__ == "__main__":
     main()
-
